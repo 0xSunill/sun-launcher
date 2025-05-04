@@ -6,7 +6,7 @@ import React from 'react'
 const Hero = () => {
     const router = useRouter()
     return (
-        <div className='flex flex-1 py-16  md:flex-row flex-col px-4 md:px-20 bg-gradient-to-b from-[#100e24] to-[#000000]'>
+        <div className='flex flex-1 py-16  md:flex-row flex-col '>
             <div className='flex-1 flex  justify-center items-start flex-col gap-2  '>
                 <h1 className='text-6xl font-bold text-white'>Create Your Solana <br />token</h1>
                 <p className='text-lg text-gray-400 mt-4 mb-2 text-wrap max-w-[470px] '> Launch your own SPL token on the Solana blockchain in just a few clicks. No coding required. Fast, secure, and fully decentralized.</p>
