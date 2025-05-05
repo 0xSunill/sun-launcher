@@ -11,9 +11,36 @@ const Page = () => {
   const [tokenImage, setTokenImage] = useState(null);
   const [description, setDescription] = useState("");
   const { connected } = useWallet();
-
+  const [socialLinks, setSocialLinks] = useState({
+    Twitter: "",
+    Telegram: "",
+    Website: ""
+  });
 
   const isFormValid = tokenName && tokenSymbol && decimals && supply && tokenImage && description;
+
+  const clickHandler = () => {
+
+    alert("Token Created!");
+
+    console.log("Token Created:", {
+      tokenName,
+      tokenSymbol,
+      decimals,
+      supply,
+      tokenImage,
+      description,
+      socialLinks: showSocials ? socialLinks : {}
+    });
+  }
+
+  const handleSocialChange = (e, platform) => {
+    setSocialLinks((prev) => ({
+      ...prev,
+      [platform]: e.target.value,
+    }));
+  };
+
 
   return (
     <div className="bg-[linear-gradient(135deg,_#0b0b1a_47%,_#a855f7_50%,_#0b0b1a_53%)]  pt-28 px-4 md:px-16">
@@ -129,6 +156,7 @@ const Page = () => {
                   </label>
                   <input
                     type="text"
+                    onChange={(e) => handleSocialChange(e, platform)}
                     placeholder={`https://${platform.toLowerCase()}.com/yourhandle`}
                     className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
@@ -145,7 +173,7 @@ const Page = () => {
 
           <div className="w-full mt-4">
             <button
-              onClick={() => alert("Token Created!")}
+              onClick={clickHandler}
               className={`w-full text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out 
                 ${!connected || !isFormValid ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"}`}
               disabled={!connected || !isFormValid}
