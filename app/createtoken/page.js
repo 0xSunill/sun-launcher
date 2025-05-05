@@ -16,7 +16,7 @@ const Page = () => {
   const isFormValid = tokenName && tokenSymbol && decimals && supply && tokenImage && description;
 
   return (
-    <div className="min-h-screen  bg-[linear-gradient(135deg,_#0b0b1a_47%,_#a855f7_50%,_#0b0b1a_53%)]  pt-28 px-4 md:px-16">
+    <div className="bg-[linear-gradient(135deg,_#0b0b1a_47%,_#a855f7_50%,_#0b0b1a_53%)]  pt-28 px-4 md:px-16">
       <div className="bg-black/30 backdrop-blur-2xl border border-gray-800 rounded-3xl p-8 md:p-12 w-full max-w-4xl mx-auto shadow-xl flex flex-col items-center gap-10">
         <h1 className="text-white text-3xl md:text-4xl font-bold text-center">
           Create Your Token
