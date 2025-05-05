@@ -9,7 +9,7 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className=" flex flex-col gap-10 bg-gradient-to-b from-[#100e24] to-[#000000]">
+    <div className=" flex flex-col gap-10 bg-gradient-to-b pt-20 from-[#100e24] to-[#000000]">
 
       <Hero />
       <Features />

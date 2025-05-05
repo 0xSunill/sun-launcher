@@ -19,7 +19,9 @@ const Nav = () => {
                     height={50}
                     className="rounded-full object-cover aspect-square mr-2"
                 />
-                Sun Launcher
+                <span className="hidden md:inline text-white text-2xl font-bold  ml-2">
+                    Sun Launcher
+                </span>
             </div>
             <div className="flex-shrink-0">
                 <WalletMultiButton />
