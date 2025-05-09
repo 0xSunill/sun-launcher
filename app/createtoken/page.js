@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { createMint } from "@solana/spl-token";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { createInitializeMint2Instruction, createMint, getMinimumBalanceForRentExemptMint, MINT_SIZE, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 
 const Page = () => {
   const [showSocials, setShowSocials] = useState(false);
@@ -11,7 +12,11 @@ const Page = () => {
   const [supply, setSupply] = useState("");
   const [tokenImage, setTokenImage] = useState(null);
   const [description, setDescription] = useState("");
-  const { connected } = useWallet();
+
+
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { connection } = useConnection();
+
   const [socialLinks, setSocialLinks] = useState({
     Twitter: "",
     Telegram: "",
@@ -22,7 +27,30 @@ const Page = () => {
 
   const clickHandler = async () => {
 
-    alert("Token Created!");
+    // console.log(publicKey)
+    const lamports = await getMinimumBalanceForRentExemptMint(connection);
+    const keypair = Keypair.generate()
+    const programId = TOKEN_PROGRAM_ID;
+    const transaction = new Transaction().add(
+      SystemProgram.createAccount({
+        fromPubkey: publicKey,
+        newAccountPubkey: keypair.publicKey, // New mint account address 
+        space: MINT_SIZE,
+        lamports,
+        programId: TOKEN_PROGRAM_ID,
+      }),
+      createInitializeMint2Instruction(keypair.publicKey, decimals, publicKey, publicKey, programId),
+    );
+
+    transaction.feePayer = publicKey;
+    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+    transaction.partialSign(keypair);
+    let response = await sendTransaction(transaction, connection);
+    console.log("Transaction response:", response);
+
+
+    // alert("Token Created!");
 
     // console.log("Token Created:", {
     //   tokenName,
@@ -34,7 +62,9 @@ const Page = () => {
     //   socialLinks: showSocials ? socialLinks : {}
     // });
 
-    const lamports = await getMinimumBalanceForRentExemptMint(connection);
+
+
+
 
   }
 
