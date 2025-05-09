@@ -16,31 +16,32 @@ import {
   SolflareWalletAdapter,
   TorusWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
+import { createMint } from "@solana/spl-token";
 
 
 
 export default function AppWalletProvider({ children }) {
-    const network = WalletAdapterNetwork.Devnet;
-    const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-    const wallets = useMemo(
-      () => [
-        new PhantomWalletAdapter(),
-        new SolflareWalletAdapter({ network }),
-        new TorusWalletAdapter(),
-      ],
-      [network],
-    );
-  
-    return (
-      <ConnectionProvider endpoint={endpoint} >
-        <WalletProvider wallets={wallets} autoConnect>
-          <WalletModalProvider>
-            
+  const network = WalletAdapterNetwork.Devnet;
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter({ network }),
+      new TorusWalletAdapter(),
+    ],
+    [network],
+  );
 
-            {children}
+  return (
+    <ConnectionProvider endpoint={endpoint} >
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
 
-          </WalletModalProvider>
-        </WalletProvider>
-      </ConnectionProvider>
-    );
-  }
+
+          {children}
+
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
+}

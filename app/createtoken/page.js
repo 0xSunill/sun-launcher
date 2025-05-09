@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { createMint } from "@solana/spl-token";
 
 const Page = () => {
   const [showSocials, setShowSocials] = useState(false);
@@ -32,6 +33,8 @@ const Page = () => {
       description,
       socialLinks: showSocials ? socialLinks : {}
     });
+
+    createMint();
   }
 
   const handleSocialChange = (e, platform) => {
