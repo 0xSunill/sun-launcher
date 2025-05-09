@@ -52,19 +52,15 @@ const Page = () => {
 
     // alert("Token Created!");
 
-    // console.log("Token Created:", {
-    //   tokenName,
-    //   tokenSymbol,
-    //   decimals,
-    //   supply,
-    //   tokenImage,
-    //   description,
-    //   socialLinks: showSocials ? socialLinks : {}
-    // });
-
-
-
-
+    console.log("Token Created:", {
+      tokenName,
+      tokenSymbol,
+      decimals,
+      supply,
+      tokenImage,
+      description,
+      socialLinks: showSocials ? socialLinks : {}
+    });
 
   }
 
