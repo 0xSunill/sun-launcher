@@ -20,21 +20,22 @@ const Page = () => {
 
   const isFormValid = tokenName && tokenSymbol && decimals && supply && tokenImage && description;
 
-  const clickHandler = () => {
+  const clickHandler = async () => {
 
     alert("Token Created!");
 
-    console.log("Token Created:", {
-      tokenName,
-      tokenSymbol,
-      decimals,
-      supply,
-      tokenImage,
-      description,
-      socialLinks: showSocials ? socialLinks : {}
-    });
+    // console.log("Token Created:", {
+    //   tokenName,
+    //   tokenSymbol,
+    //   decimals,
+    //   supply,
+    //   tokenImage,
+    //   description,
+    //   socialLinks: showSocials ? socialLinks : {}
+    // });
 
-    createMint();
+    const lamports = await getMinimumBalanceForRentExemptMint(connection);
+
   }
 
   const handleSocialChange = (e, platform) => {
