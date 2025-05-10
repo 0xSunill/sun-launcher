@@ -34,7 +34,7 @@ const Page = () => {
     const transaction = new Transaction().add(
       SystemProgram.createAccount({
         fromPubkey: publicKey,
-        newAccountPubkey: keypair.publicKey, // New mint account address 
+        newAccountPubkey: keypair.publicKey, 
         space: MINT_SIZE,
         lamports,
         programId: TOKEN_PROGRAM_ID,
@@ -49,8 +49,14 @@ const Page = () => {
     let response = await sendTransaction(transaction, connection);
     console.log("Transaction response:", response);
 
+    const signature = await connection.confirmTransaction(response, 'processed');
+    console.log("Transaction confirmed:", signature);  
+
+    
+
 
     // alert("Token Created!");
+
 
     console.log("Token Created:", {
       tokenName,
