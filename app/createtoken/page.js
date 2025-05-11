@@ -15,6 +15,7 @@ const Page = () => {
   const [description, setDescription] = useState("");
 
 
+
   const { connection } = useConnection();
   const wallet = useWallet();
 
@@ -31,18 +32,21 @@ const Page = () => {
 
     const mintKeypair = Keypair.generate();
     const metadata = {
+      
       mint: mintKeypair.publicKey,
-      name: 'KIRA',
-      symbol: 'KIR    ',
-      uri: 'https://cdn.100xdevs.com/metadata.json',
-      additionalMetadata: [],
+      name: "OPOS",
+      symbol: "OPOS",
+      uri: "https://raw.githubusercontent.com/solana-developers/opos-asset/main/assets/DeveloperPortal/metadata.json",
+      additionalMetadata: [["description", "Only Possible On Solana"]],
     };
+
 
     const mintLen = getMintLen([ExtensionType.MetadataPointer]);
     const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
     const lamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
-    const decimalsNumber = Number(decimals);
 
+
+    const decimalsNumber = Number(decimals);
     if (isNaN(decimalsNumber) || decimalsNumber < 0 || decimalsNumber > 255) {
       alert("Decimals must be a number between 0 and 255.");
       return;
@@ -58,7 +62,12 @@ const Page = () => {
         programId: TOKEN_2022_PROGRAM_ID,
       }),
 
-      createInitializeMetadataPointerInstruction(mintKeypair.publicKey, wallet.publicKey, mintKeypair.publicKey, TOKEN_2022_PROGRAM_ID),
+      createInitializeMetadataPointerInstruction(
+        mintKeypair.publicKey,
+        wallet.publicKey,
+        mintKeypair.publicKey,
+        TOKEN_2022_PROGRAM_ID
+      ),
 
       createInitializeMintInstruction(
         mintKeypair.publicKey,
@@ -70,16 +79,18 @@ const Page = () => {
 
       createInitializeInstruction({
         programId: TOKEN_2022_PROGRAM_ID,
-        mint: mintKeypair.publicKey,
         metadata: mintKeypair.publicKey,
+        updateAuthority: wallet.publicKey,
+        mint: mintKeypair.publicKey,
         name: metadata.name,
         symbol: metadata.symbol,
         uri: metadata.uri,
         mintAuthority: wallet.publicKey,
-        updateAuthority: wallet.publicKey,
       }),
     );
 
+    // console.log(metadata.mint, metadata.updateAuthority, metadata.name, metadata.symbol, metadata.uri, metadata);
+   
     transaction.feePayer = wallet.publicKey;
     transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     transaction.partialSign(mintKeypair);
