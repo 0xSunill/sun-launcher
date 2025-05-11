@@ -81,40 +81,6 @@ const Page = () => {
 
 
 
-
-
-
-
-
-
-
-
-      // console.log(publicKey)
-      // const lamports = await getMinimumBalanceForRentExemptMint(connection);
-      // const keypair = Keypair.generate()
-      // const programId = TOKEN_PROGRAM_ID;
-      // const transaction = new Transaction().add(
-      //   SystemProgram.createAccount({
-      //     fromPubkey: publicKey,
-      //     newAccountPubkey: keypair.publicKey,
-      //     space: MINT_SIZE,
-      //     lamports,
-      //     programId: TOKEN_PROGRAM_ID,
-      //   }),
-      //   createInitializeMint2Instruction(keypair.publicKey, decimals, publicKey, publicKey, programId),
-      // );
-
-      // transaction.feePayer = publicKey;
-      // transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-
-      // transaction.partialSign(keypair);
-
-      // await wallet.sendTransaction(transaction, connection);
-      // console.log(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
-
-      // alert("Token Created!");
-
-
       console.log("Token Created:", {
         tokenName,
         tokenSymbol,
