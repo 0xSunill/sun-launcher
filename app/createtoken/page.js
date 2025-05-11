@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { createInitializeMetadataPointerInstruction, createInitializeMint2Instruction, createInitializeMintInstruction, createMint, ExtensionType, getMinimumBalanceForRentExemptMint, getMintLen, LENGTH_SIZE, MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, TYPE_SIZE } from "@solana/spl-token";
+import { createInitializeMetadataPointerInstruction, createInitializeMintInstruction, createMint, ExtensionType, getMinimumBalanceForRentExemptMint, getMintLen, LENGTH_SIZE, MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, TYPE_SIZE } from "@solana/spl-token";
 import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 import { createInitializeInstruction, pack } from '@solana/spl-token-metadata';
 
@@ -35,11 +35,12 @@ const Page = () => {
     const mintKeypair = Keypair.generate();
     const metadata = {
       mint: mintKeypair.publicKey,
-      name: tokenName,
-      symbol: tokenSymbol,
-      uri: `https://example.com/${tokenName}.json`,
+      name: 'KIRA',
+      symbol: 'KIR    ',
+      uri: 'https://cdn.100xdevs.com/metadata.json',
       additionalMetadata: [],
     };
+
 
     const mintLen = getMintLen([ExtensionType.MetadataPointer]);
     const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
