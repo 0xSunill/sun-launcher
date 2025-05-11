@@ -1,8 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { createInitializeMint2Instruction, createMint, getMinimumBalanceForRentExemptMint, MINT_SIZE, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { TOKEN_2022_PROGRAM_ID, getMintLen, createInitializeMetadataPointerInstruction, createInitializeMintInstruction, TYPE_SIZE, LENGTH_SIZE, ExtensionType } from "@solana/spl-token"
+import { createInitializeInstruction, pack } from '@solana/spl-token-metadata';
 
 const Page = () => {
   const [showSocials, setShowSocials] = useState(false);
@@ -14,8 +15,7 @@ const Page = () => {
   const [description, setDescription] = useState("");
 
 
-  const { publicKey, connected, sendTransaction } = useWallet();
-  const { connection } = useConnection();
+
 
   const [socialLinks, setSocialLinks] = useState({
     Twitter: "",
@@ -24,46 +24,109 @@ const Page = () => {
   });
 
   const isFormValid = tokenName && tokenSymbol && decimals && supply && tokenImage && description;
-
+  const { connection } = useConnection();
+  const wallet = useWallet();
   const clickHandler = async () => {
 
-    // console.log(publicKey)
-    const lamports = await getMinimumBalanceForRentExemptMint(connection);
-    const keypair = Keypair.generate()
-    const programId = TOKEN_PROGRAM_ID;
-    const transaction = new Transaction().add(
-      SystemProgram.createAccount({
-        fromPubkey: publicKey,
-        newAccountPubkey: keypair.publicKey, 
-        space: MINT_SIZE,
-        lamports,
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      createInitializeMint2Instruction(keypair.publicKey, decimals, publicKey, publicKey, programId),
-    );
-
-    transaction.feePayer = publicKey;
-    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-
-    transaction.partialSign(keypair);
-    let response = await sendTransaction(transaction, connection);
-    console.log("Transaction response:", response);
-
-    // alert("Token Created!");
 
 
-    console.log("Token Created:", {
-      tokenName,
-      tokenSymbol,
-      decimals,
-      supply,
-      tokenImage,
-      description,
-      socialLinks: showSocials ? socialLinks : {}
-    });
 
+
+    if (!connected) {
+
+
+      const mintKeypair = Keypair.generate();
+      const metadata = {
+        mint: mintKeypair.publicKey,
+        name: tokenName,
+        symbol: tokenSymbol,
+        uri: `https://example.com/${tokenName}.json`,
+        additionalMetadata: [],
+      };
+
+      const mintLen = getMintLen([ExtensionType.MetadataPointer]);
+      const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
+
+      const lamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
+
+      const transaction = new Transaction().add(
+
+        SystemProgram.createAccount({
+          fromPubkey: wallet.publicKey,
+          newAccountPubkey: mintKeypair.publicKey,
+          space: mintLen,
+          lamports,
+          programId: TOKEN_2022_PROGRAM_ID,
+        }),
+
+        createInitializeMetadataPointerInstruction(mintKeypair.publicKey, wallet.publicKey, mintKeypair.publicKey, TOKEN_2022_PROGRAM_ID),
+        createInitializeMintInstruction(mintKeypair.publicKey, decimals, wallet.publicKey, null, TOKEN_2022_PROGRAM_ID),
+        createInitializeInstruction({
+          programId: TOKEN_2022_PROGRAM_ID,
+          mint: mintKeypair.publicKey,
+          metadata: mintKeypair.publicKey,
+          name: metadata.name,
+          symbol: metadata.symbol,
+          uri: metadata.uri,
+          mintAuthority: wallet.publicKey,
+          updateAuthority: wallet.publicKey,
+        }),
+      );
+
+      transaction.feePayer = wallet.publicKey;
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+      transaction.partialSign(mintKeypair);
+
+      await wallet.sendTransaction(transaction, connection);
+
+
+
+
+
+
+
+
+
+
+
+      // console.log(publicKey)
+      // const lamports = await getMinimumBalanceForRentExemptMint(connection);
+      // const keypair = Keypair.generate()
+      // const programId = TOKEN_PROGRAM_ID;
+      // const transaction = new Transaction().add(
+      //   SystemProgram.createAccount({
+      //     fromPubkey: publicKey,
+      //     newAccountPubkey: keypair.publicKey,
+      //     space: MINT_SIZE,
+      //     lamports,
+      //     programId: TOKEN_PROGRAM_ID,
+      //   }),
+      //   createInitializeMint2Instruction(keypair.publicKey, decimals, publicKey, publicKey, programId),
+      // );
+
+      // transaction.feePayer = publicKey;
+      // transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+      // transaction.partialSign(keypair);
+
+      // await wallet.sendTransaction(transaction, connection);
+      // console.log(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
+
+      // alert("Token Created!");
+
+
+      console.log("Token Created:", {
+        tokenName,
+        tokenSymbol,
+        decimals,
+        supply,
+        tokenImage,
+        description,
+        socialLinks: showSocials ? socialLinks : {}
+      });
+
+    }
   }
-
   const handleSocialChange = (e, platform) => {
     setSocialLinks((prev) => ({
       ...prev,
