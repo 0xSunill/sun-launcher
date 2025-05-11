@@ -34,7 +34,7 @@ const Page = () => {
   const clickHandler = async () => {
 
 
-    const metadataURI = await uploadToPinata(tokenImage, tokenName,tokenSymbol, description);
+    const metadataURI = await uploadToPinata(tokenImage, tokenName, tokenSymbol, description);
     console.log("Metadata uploaded to IPFS:", metadataURI);
 
 
@@ -106,7 +106,7 @@ const Page = () => {
     await wallet.sendTransaction(transaction, connection);
 
     console.log(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
-
+    alert(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
     // console.log("Token Created:", {
     //   tokenName,
     //   tokenSymbol,
