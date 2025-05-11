@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { createInitializeMetadataPointerInstruction, createInitializeMint2Instruction, createInitializeMintInstruction, createMint, ExtensionType, getMinimumBalanceForRentExemptMint, getMintLen, LENGTH_SIZE, MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, TYPE_SIZE } from "@solana/spl-token";
 import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { TOKEN_2022_PROGRAM_ID, getMintLen, createInitializeMetadataPointerInstruction, createInitializeMintInstruction, TYPE_SIZE, LENGTH_SIZE, ExtensionType } from "@solana/spl-token"
 import { createInitializeInstruction, pack } from '@solana/spl-token-metadata';
 
 const Page = () => {
@@ -15,6 +15,8 @@ const Page = () => {
   const [description, setDescription] = useState("");
 
 
+  const { connection } = useConnection();
+  const wallet = useWallet();
 
 
   const [socialLinks, setSocialLinks] = useState({
@@ -24,80 +26,93 @@ const Page = () => {
   });
 
   const isFormValid = tokenName && tokenSymbol && decimals && supply && tokenImage && description;
-  const { connection } = useConnection();
-  const wallet = useWallet();
+
   const clickHandler = async () => {
 
+    // console.log(publicKey)
 
 
+    const mintKeypair = Keypair.generate();
+    const metadata = {
+      mint: mintKeypair.publicKey,
+      name: tokenName,
+      symbol: tokenSymbol,
+      uri: `https://example.com/${tokenName}.json`,
+      additionalMetadata: [],
+    };
 
+    const mintLen = getMintLen([ExtensionType.MetadataPointer]);
+    const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
 
-    if (!connected) {
+    const lamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
 
+    const decimalsNumber = Number(decimals);
 
-      const mintKeypair = Keypair.generate();
-      const metadata = {
-        mint: mintKeypair.publicKey,
-        name: tokenName,
-        symbol: tokenSymbol,
-        uri: `https://example.com/${tokenName}.json`,
-        additionalMetadata: [],
-      };
-
-      const mintLen = getMintLen([ExtensionType.MetadataPointer]);
-      const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
-
-      const lamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
-
-      const transaction = new Transaction().add(
-
-        SystemProgram.createAccount({
-          fromPubkey: wallet.publicKey,
-          newAccountPubkey: mintKeypair.publicKey,
-          space: mintLen,
-          lamports,
-          programId: TOKEN_2022_PROGRAM_ID,
-        }),
-
-        createInitializeMetadataPointerInstruction(mintKeypair.publicKey, wallet.publicKey, mintKeypair.publicKey, TOKEN_2022_PROGRAM_ID),
-        createInitializeMintInstruction(mintKeypair.publicKey, decimals, wallet.publicKey, null, TOKEN_2022_PROGRAM_ID),
-        createInitializeInstruction({
-          programId: TOKEN_2022_PROGRAM_ID,
-          mint: mintKeypair.publicKey,
-          metadata: mintKeypair.publicKey,
-          name: metadata.name,
-          symbol: metadata.symbol,
-          uri: metadata.uri,
-          mintAuthority: wallet.publicKey,
-          updateAuthority: wallet.publicKey,
-        }),
-      );
-
-      transaction.feePayer = wallet.publicKey;
-      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-      transaction.partialSign(mintKeypair);
-
-      await wallet.sendTransaction(transaction, connection);
-
-
-
-      console.log("Token Created:", {
-        tokenName,
-        tokenSymbol,
-        decimals,
-        supply,
-        tokenImage,
-        description,
-        socialLinks: showSocials ? socialLinks : {}
-      });
-
+    if (isNaN(decimalsNumber) || decimalsNumber < 0 || decimalsNumber > 255) {
+      alert("Decimals must be a number between 0 and 255.");
+      return;
     }
+
+
+    const transaction = new Transaction().add(
+
+      SystemProgram.createAccount({
+        fromPubkey: wallet.publicKey,
+        newAccountPubkey: mintKeypair.publicKey,
+        space: mintLen,
+        lamports,
+        programId: TOKEN_2022_PROGRAM_ID,
+      }),
+
+
+      createInitializeMetadataPointerInstruction(mintKeypair.publicKey, wallet.publicKey, mintKeypair.publicKey, TOKEN_2022_PROGRAM_ID),
+
+      createInitializeMintInstruction(
+        mintKeypair.publicKey,
+        decimalsNumber,
+        wallet.publicKey,
+        wallet.publicKey,
+        TOKEN_2022_PROGRAM_ID
+      ),
+
+      createInitializeInstruction({
+        programId: TOKEN_2022_PROGRAM_ID,
+        mint: mintKeypair.publicKey,
+        metadata: mintKeypair.publicKey,
+        name: metadata.name,
+        symbol: metadata.symbol,
+        uri: metadata.uri,
+        mintAuthority: wallet.publicKey,
+        updateAuthority: wallet.publicKey,
+      }),
+    );
+
+    transaction.feePayer = wallet.publicKey;
+    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    transaction.partialSign(mintKeypair);
+
+    await wallet.sendTransaction(transaction, connection);
+
+    console.log(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
+
+    // console.log("Token Created:", {
+    //   tokenName,
+    //   tokenSymbol,
+    //   decimals,
+    //   supply,
+    //   tokenImage,
+    //   description,
+    //   socialLinks: showSocials ? socialLinks : {}
+    // });
+
   }
+
   const handleSocialChange = (e, platform) => {
     setSocialLinks((prev) => ({
       ...prev,
       [platform]: e.target.value,
     }));
+
   };
 
 
@@ -144,6 +159,9 @@ const Page = () => {
               </label>
               <input
                 type="number"
+                min="0"
+                max="255"
+                step="1"
                 value={decimals}
                 onChange={(e) => setDecimals(e.target.value)}
                 placeholder="Enter token decimals"
@@ -225,7 +243,7 @@ const Page = () => {
           )}
 
           <div className="mt-4 text-sm">
-            {!connected && (
+            {!wallet.connected && (
               <p className="text-red-500">Please connect your wallet to create a token.</p>
             )}
           </div>
@@ -234,8 +252,8 @@ const Page = () => {
             <button
               onClick={clickHandler}
               className={`w-full text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out 
-                ${!connected || !isFormValid ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"}`}
-              disabled={!connected || !isFormValid}
+                ${!wallet.connected || !isFormValid ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"}`}
+              disabled={!wallet.connected || !isFormValid}
             >
               Create Token
             </button>
