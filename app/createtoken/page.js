@@ -4,7 +4,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { createInitializeMetadataPointerInstruction, createInitializeMintInstruction, createMint, ExtensionType, getMinimumBalanceForRentExemptMint, getMintLen, LENGTH_SIZE, MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, TYPE_SIZE } from "@solana/spl-token";
 import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 import { createInitializeInstruction, pack } from '@solana/spl-token-metadata';
-
+// check point before creating associated token accout
 const Page = () => {
   const [showSocials, setShowSocials] = useState(false);
   const [tokenName, setTokenName] = useState("");
@@ -29,9 +29,6 @@ const Page = () => {
 
   const clickHandler = async () => {
 
-    // console.log(publicKey)
-
-
     const mintKeypair = Keypair.generate();
     const metadata = {
       mint: mintKeypair.publicKey,
@@ -41,19 +38,15 @@ const Page = () => {
       additionalMetadata: [],
     };
 
-
     const mintLen = getMintLen([ExtensionType.MetadataPointer]);
     const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
-
     const lamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
-
     const decimalsNumber = Number(decimals);
 
     if (isNaN(decimalsNumber) || decimalsNumber < 0 || decimalsNumber > 255) {
       alert("Decimals must be a number between 0 and 255.");
       return;
     }
-
 
     const transaction = new Transaction().add(
 
@@ -64,7 +57,6 @@ const Page = () => {
         lamports,
         programId: TOKEN_2022_PROGRAM_ID,
       }),
-
 
       createInitializeMetadataPointerInstruction(mintKeypair.publicKey, wallet.publicKey, mintKeypair.publicKey, TOKEN_2022_PROGRAM_ID),
 
