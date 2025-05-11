@@ -1,9 +1,11 @@
+
 "use client";
 import React, { useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { createInitializeMetadataPointerInstruction, createInitializeMintInstruction, createMint, ExtensionType, getMinimumBalanceForRentExemptMint, getMintLen, LENGTH_SIZE, MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, TYPE_SIZE } from "@solana/spl-token";
 import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 import { createInitializeInstruction, pack } from '@solana/spl-token-metadata';
+import { uploadToPinata } from "@/utils/pinataUpload";
 // check point before creating associated token accout
 const Page = () => {
   const [showSocials, setShowSocials] = useState(false);
@@ -13,7 +15,6 @@ const Page = () => {
   const [supply, setSupply] = useState("");
   const [tokenImage, setTokenImage] = useState(null);
   const [description, setDescription] = useState("");
-
 
 
   const { connection } = useConnection();
@@ -28,15 +29,22 @@ const Page = () => {
 
   const isFormValid = tokenName && tokenSymbol && decimals && supply && tokenImage && description;
 
+
+
   const clickHandler = async () => {
+
+
+    const metadataURI = await uploadToPinata(tokenImage, tokenName,tokenSymbol, description);
+    console.log("Metadata uploaded to IPFS:", metadataURI);
+
 
     const mintKeypair = Keypair.generate();
     const metadata = {
-      
+
       mint: mintKeypair.publicKey,
-      name: "OPOS",
-      symbol: "OPOS",
-      uri: "https://raw.githubusercontent.com/solana-developers/opos-asset/main/assets/DeveloperPortal/metadata.json",
+      name: tokenName,
+      symbol: tokenSymbol,
+      uri: metadataURI,
       additionalMetadata: [["description", "Only Possible On Solana"]],
     };
 
@@ -90,7 +98,7 @@ const Page = () => {
     );
 
     // console.log(metadata.mint, metadata.updateAuthority, metadata.name, metadata.symbol, metadata.uri, metadata);
-   
+
     transaction.feePayer = wallet.publicKey;
     transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     transaction.partialSign(mintKeypair);
