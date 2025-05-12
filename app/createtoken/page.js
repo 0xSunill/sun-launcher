@@ -18,6 +18,8 @@ const Page = () => {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
+
+
   const { connection } = useConnection();
   const wallet = useWallet();
 
@@ -123,22 +125,23 @@ const Page = () => {
 
       toast.dismiss(loadingToast);
       toast.custom((t) => (
-        <div className="bg-[#1e1e2f] text-white border border-purple-500 px-6 py-4 rounded-xl shadow-lg flex items-center gap-4">
-          <div className="flex-1">
-            <p className="font-semibold">Token Created!</p>
-            <p className="text-sm opacity-75">{mintKeypair.publicKey.toBase58()}</p>
+        <div className="bg-[#1e1e2f] text-white border border-purple-500 px-4 py-3 sm:px-6 sm:py-4 rounded-xl shadow-lg flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-[90%] sm:w-auto max-w-[500px] mx-auto">
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-base">Token Created!</p>
+            <p className="opacity-75 break-words text-xs sm:text-sm">{mintKeypair.publicKey.toBase58()}</p>
           </div>
           <button
             onClick={() => {
               toast.dismiss(t.id);
               window.open(`https://explorer.solana.com/address/${mintKeypair.publicKey.toBase58()}?cluster=devnet`, "_blank");
             }}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm w-full sm:w-auto"
           >
             View
           </button>
         </div>
       ));
+
     } catch (err) {
       toast.error(err.message || "Failed to create token", {
         id: loadingToast,
@@ -146,6 +149,20 @@ const Page = () => {
       });
     } finally {
       setLoading(false);
+      setTokenName("");
+      setTokenSymbol("");
+      setDecimals("");
+      setSupply("");
+      setTokenImage(null);
+      setDescription("");
+      
+      setSocialLinks({
+        Twitter: "",
+        Telegram: "",
+        Website: ""
+      });
+      setShowSocials(false);
+
     }
 
 
@@ -300,7 +317,7 @@ const Page = () => {
           )}
 
           <div className="mt-4 text-sm">
-            {!wallet.connected   && (
+            {!wallet.connected && (
               <p className="text-red-500">Please connect your wallet to create a token.</p>
             )}
           </div>
