@@ -26,7 +26,7 @@ const Page = () => {
   const [skeleton, setSkeleton] = useState(false);
 
   const [mintAddress, setMintAddress] = useState(null);
-
+  const [modal, setModal] = useState(false);
   const { connection } = useConnection();
   const wallet = useWallet();
 
@@ -132,24 +132,28 @@ const Page = () => {
       await wallet.sendTransaction(transaction, connection);
 
       setMintAddress(mintKeypair.publicKey.toBase58());
+
       toast.dismiss(loadingToast);
-      toast.custom((t) => (
-        <div className="bg-[#1e1e2f] text-white border border-purple-500 px-4 py-3 sm:px-6 sm:py-4 rounded-xl shadow-lg flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-[90%] sm:w-auto max-w-[500px] mx-auto">
-          <div className="flex-1 text-sm">
-            <p className="font-semibold text-base">Token Created!</p>
-            <p className="opacity-75 break-words text-xs sm:text-sm">{mintKeypair.publicKey.toBase58()}</p>
-          </div>
-          <button
-            onClick={() => {
-              toast.dismiss(t.id);
-              window.open(`https://explorer.solana.com/address/${mintKeypair.publicKey.toBase58()}?cluster=devnet`, "_blank");
-            }}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm w-full sm:w-auto"
-          >
-            View
-          </button>
-        </div>
-      ));
+
+      setModal(true);
+
+      // toast.custom((t) => (
+      //   <div className="bg-[#1e1e2f] text-white border border-purple-500 px-4 py-3 sm:px-6 sm:py-4 rounded-xl shadow-lg flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-[90%] sm:w-auto max-w-[500px] mx-auto">
+      //     <div className="flex-1 text-sm">
+      //       <p className="font-semibold text-base">Token Created!</p>
+      //       <p className="opacity-75 break-words text-xs sm:text-sm">{mintKeypair.publicKey.toBase58()}</p>
+      //     </div>
+      //     <button
+      //       onClick={() => {
+      //         toast.dismiss(t.id);
+      //         window.open(`https://explorer.solana.com/address/${mintKeypair.publicKey.toBase58()}?cluster=devnet`, "_blank");
+      //       }}
+      //       className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm w-full sm:w-auto"
+      //     >
+      //       View
+      //     </button>
+      //   </div>
+      // ));
 
     } catch (err) {
       toast.error(err.message || "Failed to create token", {
@@ -173,8 +177,6 @@ const Page = () => {
       setShowSocials(false);
 
     }
-
-
 
 
     // alert(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
@@ -222,6 +224,45 @@ const Page = () => {
 
 
         <div className="bg-[linear-gradient(135deg,_#0b0b1a_47%,_#a855f7_50%,_#0b0b1a_53%)]  pt-28 px-4 md:px-16">
+
+
+
+          {modal && (
+            <div
+              onClick={() => setModal(false)}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center"
+            >
+              <div
+                onClick={(e) => e.stopPropagation()} // Prevent modal click from closing
+                className="bg-[#1e1e2f] border border-purple-500 text-white px-2 py-6 rounded-2xl shadow-lg max-w-md w-[90%] text-center"
+              >
+                <h2 className="text-xl font-semibold mb-2">🎉 Token Created</h2>
+                <p className="text-sm break-words mb-4">
+                  <span className="font-semibold">Mint Address:</span><br />
+                  {mintAddress}
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center  gap-4">
+
+                  <button
+                    onClick={() => { window.open(`https://explorer.solana.com/address/${mintAddress}?cluster=devnet`, "_blank"); setModal(false); }}
+                    className="bg-blue-500 w-full hover:bg-blue-600  transition-colors duration-200 text-white font-semibold py-2 px-5 rounded-lg shadow-md mt-2"
+                  >
+                    View on Explorer
+                  </button>
+
+
+                  <button
+                    onClick={handleMintToken}
+                    className="bg-green-500 w-full hover:bg-green-600 transition-colors duration-200 text-white font-semibold py-2 px-5 rounded-lg shadow-md mt-2"
+                  >
+                    Mint Token
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
 
           <div className="bg-black/30 backdrop-blur-2xl border border-gray-800 rounded-3xl p-8 md:p-12 w-full max-w-4xl mx-auto shadow-xl flex flex-col items-center gap-10">
             <h1 className="text-white text-3xl md:text-4xl font-bold text-center">
@@ -347,13 +388,13 @@ const Page = () => {
                 </div>
               )}
 
-              <div className="mt-4 text-sm">
+              <div className="mt-2 text-sm">
                 {!wallet.connected && (
                   <p className="text-red-500">Please connect your wallet to create a token.</p>
                 )}
               </div>
 
-              <div className="w-full mt-4">
+              <div className="w-full mt-2">
                 <button
                   onClick={clickHandler}
                   className={`w-full text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out 
@@ -379,24 +420,33 @@ const Page = () => {
                           duration: 1000,
                         });
                       }}
-                    
+
                       title="Click to copy"
                       className="cursor-pointer text-sm md:text-base text-white bg-gray-900 p-3 rounded break-words hover:bg-gray-700 transition"
                     >
                       {mintAddress}
                     </div>
 
-                    <button
-                      onClick={handleMintToken}
-                      className="self-start mt-4 w-full bg-green-500 hover:bg-green-600 transition-colors duration-200 text-white font-semibold py-2 px-5 rounded-lg shadow-md"
-                    >
-                      Mint Token
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-center justify-center  gap-4">
+
+                      <button
+                        onClick={() => { window.open(`https://explorer.solana.com/address/${mintAddress}?cluster=devnet`, "_blank"); setModal(false); }}
+                        className="bg-blue-500 w-full hover:bg-blue-600  transition-colors duration-200 text-white font-semibold py-2 px-5 rounded-lg shadow-md mt-2"
+                      >
+                        View on Explorer
+                      </button>
+
+
+                      <button
+                        onClick={handleMintToken}
+                        className="bg-green-500 w-full hover:bg-green-600 transition-colors duration-200 text-white font-semibold py-2 px-5 rounded-lg shadow-md mt-2"
+                      >
+                        Mint Token
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
-
-
 
             </div>
           </div>

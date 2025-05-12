@@ -25,11 +25,12 @@ const MintTokenPage = () => {
   const defaultMint = searchParams.get('mint') || '';
   const [mintAddress, setMintAddress] = useState(defaultMint);
 
+
+
   const handleMint = async () => {
     if (!wallet.publicKey) {
       return toast.error('Please connect your wallet');
     }
-
     setLoading(true);
     const loadingToast = toast.loading("Minting...");
     const mint = new PublicKey(mintAddress);
@@ -41,7 +42,6 @@ const MintTokenPage = () => {
         false,
         TOKEN_2022_PROGRAM_ID,
       );
-
       console.log("Associated Token Address:", associatedToken.toBase58());
 
       // ✅ Check if ATA exists
@@ -82,15 +82,37 @@ const MintTokenPage = () => {
       await wallet.sendTransaction(mintTx, connection);
 
       toast.dismiss(loadingToast);
-      toast.success("Minted!", {
-        duration: 5000,
-        iconTheme: {
-          primary: '#4ade80',
-          secondary: '#1e1e2f',
-        },
-      });
 
-      console.log("Mint successful!");
+      // toast.success("Minted!", {
+      //   duration: 5000,
+      //   iconTheme: {
+      //     primary: '#4ade80',
+      //     secondary: '#1e1e2f',
+      //   },
+      // });
+
+      // console.log("Mint successful!");
+
+
+      toast.custom((t) => (
+        <div className="bg-[#1e1e2f] text-white border border-purple-500 px-4 py-3 sm:px-6 sm:py-4 rounded-xl shadow-lg flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-[90%] sm:w-auto max-w-[500px] mx-auto">
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-base">{amount} Tokens Minted 🎉</p>
+            <p className="opacity-75 break-words text-xs sm:text-sm">{associatedToken.toBase58()}</p>
+          </div>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              window.open(`https://explorer.solana.com/address/${associatedToken.toBase58()}?cluster=devnet`, "_blank");
+            }}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm w-full sm:w-auto"
+          >
+            View
+          </button>
+        </div>
+      ));
+
+
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to mint", {
@@ -132,6 +154,8 @@ const MintTokenPage = () => {
           >
             {loading ? 'Minting...' : 'Mint'}
           </button>
+
+
         </div>
       </div>
     </div>
