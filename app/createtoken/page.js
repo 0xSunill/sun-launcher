@@ -1,5 +1,6 @@
 
 "use client";
+
 import React, { useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { createInitializeMetadataPointerInstruction, createInitializeMintInstruction, createMint, ExtensionType, getMinimumBalanceForRentExemptMint, getMintLen, LENGTH_SIZE, MINT_SIZE, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, TYPE_SIZE } from "@solana/spl-token";
@@ -7,8 +8,13 @@ import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 import { createInitializeInstruction, pack } from '@solana/spl-token-metadata';
 import { uploadToPinata } from "@/utils/pinataUpload";
 import toast from "react-hot-toast";
-// check point before creating associated token accout
+import { useRouter } from "next/navigation";
+
+import Skeleton from "@/components/Skeleton";
 const Page = () => {
+
+  const router = useRouter();
+
   const [showSocials, setShowSocials] = useState(false);
   const [tokenName, setTokenName] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
@@ -17,8 +23,9 @@ const Page = () => {
   const [tokenImage, setTokenImage] = useState(null);
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [skeleton, setSkeleton] = useState(false);
 
-
+  const [mintAddress, setMintAddress] = useState(null);
 
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -29,6 +36,7 @@ const Page = () => {
     Telegram: "",
     Website: ""
   });
+  const [mintKeypairs, setMintKeypair] = useState(null);
 
   const isFormValid = tokenName && tokenSymbol && decimals && supply && tokenImage && description;
 
@@ -56,6 +64,7 @@ const Page = () => {
 
 
       const mintKeypair = Keypair.generate();
+      setMintKeypair(mintKeypair);
       const metadata = {
 
         mint: mintKeypair.publicKey,
@@ -122,7 +131,7 @@ const Page = () => {
 
       await wallet.sendTransaction(transaction, connection);
 
-
+      setMintAddress(mintKeypair.publicKey.toBase58());
       toast.dismiss(loadingToast);
       toast.custom((t) => (
         <div className="bg-[#1e1e2f] text-white border border-purple-500 px-4 py-3 sm:px-6 sm:py-4 rounded-xl shadow-lg flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-[90%] sm:w-auto max-w-[500px] mx-auto">
@@ -155,7 +164,7 @@ const Page = () => {
       setSupply("");
       setTokenImage(null);
       setDescription("");
-      
+
       setSocialLinks({
         Twitter: "",
         Telegram: "",
@@ -181,6 +190,19 @@ const Page = () => {
 
   }
 
+
+  const handleMintToken = () => {
+    if (!mintKeypairs) {
+      alert("Mint Keypair not ready yet");
+      return;
+    }
+
+    setSkeleton(true);
+    router.push(`/minttoken?mint=${mintAddress}`);
+
+  };
+
+
   const handleSocialChange = (e, platform) => {
     setSocialLinks((prev) => ({
       ...prev,
@@ -191,150 +213,197 @@ const Page = () => {
 
 
   return (
-    <div className="bg-[linear-gradient(135deg,_#0b0b1a_47%,_#a855f7_50%,_#0b0b1a_53%)]  pt-28 px-4 md:px-16">
-      <div className="bg-black/30 backdrop-blur-2xl border border-gray-800 rounded-3xl p-8 md:p-12 w-full max-w-4xl mx-auto shadow-xl flex flex-col items-center gap-10">
-        <h1 className="text-white text-3xl md:text-4xl font-bold text-center">
-          Create Your Token
-        </h1>
 
-        <div className="w-full flex flex-col gap-6">
+    <>
+      {skeleton ? (
+        <Skeleton />
+      ) : (
 
-          <div className="flex flex-col md:flex-row gap-6 md:gap-10 w-full">
-            <div className="flex-1">
-              <label className="text-white text-base md:text-lg font-semibold">
-                <span className="text-red-600">*</span> Token Name
-              </label>
-              <input
-                type="text"
-                value={tokenName}
-                onChange={(e) => setTokenName(e.target.value)}
-                placeholder="Enter token name"
-                className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="text-white text-base md:text-lg font-semibold">
-                <span className="text-red-600">*</span> Token Symbol
-              </label>
-              <input
-                type="text"
-                value={tokenSymbol}
-                onChange={(e) => setTokenSymbol(e.target.value)}
-                placeholder="Enter token symbol"
-                className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
-              />
-            </div>
-          </div>
 
-          <div className="flex flex-col md:flex-row gap-6 md:gap-10 w-full">
-            <div className="flex-1">
-              <label className="text-white text-base md:text-lg font-semibold">
-                <span className="text-red-600">*</span> Decimals
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="255"
-                step="1"
-                value={decimals}
-                onChange={(e) => setDecimals(e.target.value)}
-                placeholder="Enter token decimals"
-                className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="text-white text-base md:text-lg font-semibold">
-                <span className="text-red-600">*</span> Supply
-              </label>
-              <input
-                type="number"
-                value={supply}
-                onChange={(e) => setSupply(e.target.value)}
-                placeholder="Enter token supply"
-                className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
-              />
-            </div>
-          </div>
 
-          <div className="flex flex-col md:flex-row gap-6 md:gap-10 w-full">
-            <div className="flex-1">
-              <label className="text-white text-base md:text-lg font-semibold">
-                <span className="text-red-600">*</span> Token Image
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setTokenImage(e.target.files[0])}
-                className="mt-2 w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="text-white text-base md:text-lg font-semibold">
-                <span className="text-red-600">*</span> Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter token description"
-                rows={4}
-                className="mt-2 w-full bg-[#0D1117] text-white p-4 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 resize-none"
-              />
-            </div>
-          </div>
+        <div className="bg-[linear-gradient(135deg,_#0b0b1a_47%,_#a855f7_50%,_#0b0b1a_53%)]  pt-28 px-4 md:px-16">
 
-          <div className="flex items-center gap-4 mt-2">
-            <label className="text-white font-semibold text-base md:text-lg">
-              Show Socials
-            </label>
-            <div
-              onClick={() => setShowSocials(!showSocials)}
-              className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-colors ${showSocials ? "bg-purple-600" : "bg-gray-500"
-                }`}
-            >
-              <div
-                className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${showSocials ? "translate-x-6" : "translate-x-0"
-                  }`}
-              />
-            </div>
-          </div>
+          <div className="bg-black/30 backdrop-blur-2xl border border-gray-800 rounded-3xl p-8 md:p-12 w-full max-w-4xl mx-auto shadow-xl flex flex-col items-center gap-10">
+            <h1 className="text-white text-3xl md:text-4xl font-bold text-center">
+              Create Your Token
+            </h1>
 
-          {showSocials && (
-            <div className="flex flex-col gap-4 w-full">
-              {["Twitter", "Telegram", "Website"].map((platform) => (
-                <div key={platform}>
-                  <label className="text-white text-base font-semibold">
-                    {platform}
+            <div className="w-full flex flex-col gap-6">
+
+              <div className="flex flex-col md:flex-row gap-6 md:gap-10 w-full">
+                <div className="flex-1">
+                  <label className="text-white text-base md:text-lg font-semibold">
+                    <span className="text-red-600">*</span> Token Name
                   </label>
                   <input
                     type="text"
-                    onChange={(e) => handleSocialChange(e, platform)}
-                    placeholder={`https://${platform.toLowerCase()}.com/yourhandle`}
+                    value={tokenName}
+                    onChange={(e) => setTokenName(e.target.value)}
+                    placeholder="Enter token name"
                     className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="flex-1">
+                  <label className="text-white text-base md:text-lg font-semibold">
+                    <span className="text-red-600">*</span> Token Symbol
+                  </label>
+                  <input
+                    type="text"
+                    value={tokenSymbol}
+                    onChange={(e) => setTokenSymbol(e.target.value)}
+                    placeholder="Enter token symbol"
+                    className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  />
+                </div>
+              </div>
 
-          <div className="mt-4 text-sm">
-            {!wallet.connected && (
-              <p className="text-red-500">Please connect your wallet to create a token.</p>
-            )}
-          </div>
+              <div className="flex flex-col md:flex-row gap-6 md:gap-10 w-full">
+                <div className="flex-1">
+                  <label className="text-white text-base md:text-lg font-semibold">
+                    <span className="text-red-600">*</span> Decimals
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="255"
+                    step="1"
+                    value={decimals}
+                    onChange={(e) => setDecimals(e.target.value)}
+                    placeholder="Enter token decimals"
+                    className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-white text-base md:text-lg font-semibold">
+                    <span className="text-red-600">*</span> Supply
+                  </label>
+                  <input
+                    type="number"
+                    value={supply}
+                    onChange={(e) => setSupply(e.target.value)}
+                    placeholder="Enter token supply"
+                    className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  />
+                </div>
+              </div>
 
-          <div className="w-full mt-4">
-            <button
-              onClick={clickHandler}
-              className={`w-full text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out 
+              <div className="flex flex-col md:flex-row gap-6 md:gap-10 w-full">
+                <div className="flex-1">
+                  <label className="text-white text-base md:text-lg font-semibold">
+                    <span className="text-red-600">*</span> Token Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setTokenImage(e.target.files[0])}
+                    className="mt-2 w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-white text-base md:text-lg font-semibold">
+                    <span className="text-red-600">*</span> Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter token description"
+                    rows={4}
+                    className="mt-2 w-full bg-[#0D1117] text-white p-4 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 mt-2">
+                <label className="text-white font-semibold text-base md:text-lg">
+                  Show Socials
+                </label>
+                <div
+                  onClick={() => setShowSocials(!showSocials)}
+                  className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-colors ${showSocials ? "bg-purple-600" : "bg-gray-500"
+                    }`}
+                >
+                  <div
+                    className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${showSocials ? "translate-x-6" : "translate-x-0"
+                      }`}
+                  />
+                </div>
+              </div>
+
+              {showSocials && (
+                <div className="flex flex-col gap-4 w-full">
+                  {["Twitter", "Telegram", "Website"].map((platform) => (
+                    <div key={platform}>
+                      <label className="text-white text-base font-semibold">
+                        {platform}
+                      </label>
+                      <input
+                        type="text"
+                        onChange={(e) => handleSocialChange(e, platform)}
+                        placeholder={`https://${platform.toLowerCase()}.com/yourhandle`}
+                        className="mt-2 w-full bg-[#0D1117] text-white p-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-4 text-sm">
+                {!wallet.connected && (
+                  <p className="text-red-500">Please connect your wallet to create a token.</p>
+                )}
+              </div>
+
+              <div className="w-full mt-4">
+                <button
+                  onClick={clickHandler}
+                  className={`w-full text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out 
                 ${!wallet.connected || !isFormValid || loading ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"}`}
-              disabled={!wallet.connected || !isFormValid || loading}
-            >
-              {loading ? "Creating..." : "Create Token"}
-            </button>
+                  disabled={!wallet.connected || !isFormValid || loading}
+                >
+                  {loading ? "Creating..." : "Create Token"}
+                </button>
+              </div>
+
+
+              {mintAddress && (
+                <div className="mt-6 p-4 bg-gray-800 border border-gray-700 rounded-lg shadow-lg">
+                  <div className="flex flex-col space-y-2">
+                    <label className="text-green-400 font-semibold text-lg flex items-center">
+                      🎉 Token Mint Address:
+                    </label>
+
+                    <div
+                      onClick={() => {
+                        navigator.clipboard.writeText(mintAddress);
+                        toast.success("Copied to clipboard!", {
+                          duration: 1000,
+                        });
+                      }}
+                    
+                      title="Click to copy"
+                      className="cursor-pointer text-sm md:text-base text-white bg-gray-900 p-3 rounded break-words hover:bg-gray-700 transition"
+                    >
+                      {mintAddress}
+                    </div>
+
+                    <button
+                      onClick={handleMintToken}
+                      className="self-start mt-4 w-full bg-green-500 hover:bg-green-600 transition-colors duration-200 text-white font-semibold py-2 px-5 rounded-lg shadow-md"
+                    >
+                      Mint Token
+                    </button>
+                  </div>
+                </div>
+              )}
+
+
+
+            </div>
           </div>
+
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
