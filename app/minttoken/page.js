@@ -1,70 +1,105 @@
 'use client';
 import React, { useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, Connection } from '@solana/web3.js';
-import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, mintTo } from '@solana/spl-token';
-
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import {
+  PublicKey,
+  Transaction,
+} from '@solana/web3.js';
+import {
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountInstruction,
+  createMintToInstruction,
+  TOKEN_2022_PROGRAM_ID,
+  getMint,
+  getAccount,
+} from '@solana/spl-token';
 import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
+
 const MintTokenPage = () => {
-  // const [mintAddress, setMintAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState('');
-  const { publicKey, signTransaction, sendTransaction } = useWallet();
-
-
+  const wallet = useWallet();
+  const { connection } = useConnection();
   const searchParams = useSearchParams();
   const defaultMint = searchParams.get('mint') || '';
   const [mintAddress, setMintAddress] = useState(defaultMint);
-  
-
-
 
   const handleMint = async () => {
-    if (!publicKey) {
+    if (!wallet.publicKey) {
       return toast.error('Please connect your wallet');
     }
 
-    // try {
-    //   setLoading(true);
-    //   setStatus('Processing...');
+    setLoading(true);
+    const loadingToast = toast.loading("Minting...");
+    const mint = new PublicKey(mintAddress);
 
-    //   const mint = new PublicKey(mintAddress);
-    //   const ata = await getAssociatedTokenAddress(mint, publicKey);
-    //   const accountInfo = await connection.getAccountInfo(ata);
+    try {
+      const associatedToken = getAssociatedTokenAddressSync(
+        mint,
+        wallet.publicKey,
+        false,
+        TOKEN_2022_PROGRAM_ID,
+      );
 
-    //   const transaction = new web3.Transaction();
+      console.log("Associated Token Address:", associatedToken.toBase58());
 
-    //   if (!accountInfo) {
-    //     // Add ATA creation instruction if not exists
-    //     transaction.add(
-    //       createAssociatedTokenAccountInstruction(publicKey, ata, publicKey, mint)
-    //     );
-    //   }
+      // ✅ Check if ATA exists
+      try {
+        await getAccount(connection, associatedToken, undefined, TOKEN_2022_PROGRAM_ID);
+        console.log("ATA already exists");
+      } catch (err) {
+        // ❗ Create ATA only if it doesn't exist
+        console.log("Creating ATA...");
+        const ataTx = new Transaction().add(
+          createAssociatedTokenAccountInstruction(
+            wallet.publicKey,
+            associatedToken,
+            wallet.publicKey,
+            mint,
+            TOKEN_2022_PROGRAM_ID,
+          )
+        );
+        await wallet.sendTransaction(ataTx, connection);
+      }
 
-    //   transaction.add(
-    //     await mintTo(
-    //       connection,
-    //       publicKey,       // payer
-    //       mint,            // mint address
-    //       ata,             // destination ATA
-    //       publicKey,       // authority (assumes mint authority is current wallet)
-    //       Number(amount) * 10 ** 9 // adjust decimals (default 9)
-    //     )
-    //   );
+      // Get decimals and calculate mint amount
+      const mintInfo = await getMint(connection, mint, undefined, TOKEN_2022_PROGRAM_ID);
+      const decimals = mintInfo.decimals;
+      const mintAmount = Number(amount) * 10 ** decimals;
 
-    //   const signed = await signTransaction(transaction);
-    //   const sig = await sendTransaction(signed, connection);
-    //   await connection.confirmTransaction(sig, 'confirmed');
+      // Mint tokens
+      const mintTx = new Transaction().add(
+        createMintToInstruction(
+          mint,
+          associatedToken,
+          wallet.publicKey,
+          mintAmount,
+          [],
+          TOKEN_2022_PROGRAM_ID
+        )
+      );
+      await wallet.sendTransaction(mintTx, connection);
 
-    //   setStatus(`✅ Minted successfully! Tx: ${sig}`);
-    // } catch (err) {
-    //   console.error(err);
-    //   setStatus('❌ Minting failed.');
-    // }
+      toast.dismiss(loadingToast);
+      toast.success("Minted!", {
+        duration: 5000,
+        iconTheme: {
+          primary: '#4ade80',
+          secondary: '#1e1e2f',
+        },
+      });
 
-    // setLoading(false);
+      console.log("Mint successful!");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Failed to mint", {
+        id: loadingToast,
+        duration: 10000,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,12 +132,6 @@ const MintTokenPage = () => {
           >
             {loading ? 'Minting...' : 'Mint'}
           </button>
-
-          {status && (
-            <p className="text-white text-sm mt-2 break-words text-center">
-              {status}
-            </p>
-          )}
         </div>
       </div>
     </div>
