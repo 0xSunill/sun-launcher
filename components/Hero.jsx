@@ -1,18 +1,29 @@
 "use client"
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import React, { useState } from 'react'
+import Skeleton from './Skeleton'
 
-const Hero = () => {
+const Hero = ({ setLoading }) => {
     const router = useRouter()
+
+
+    const handleClick = () => {
+        setLoading(true)
+        setTimeout(() => {
+            router.push('/createtoken')
+        }, 1000)
+    }
+
+  
     return (
         <div className='flex flex-1 py-16 px-4 md:px-20 pt-20 md:flex-row flex-col '>
             <div className='flex-1 flex  justify-center items-start flex-col gap-2  '>
                 <h1 className='text-6xl font-bold text-white'>Create Your Solana <br />token</h1>
                 <p className='text-lg text-gray-400 mt-4 mb-2 text-wrap max-w-[470px] '> Launch your own SPL token on the Solana blockchain in just a few clicks. No coding required. Fast, secure, and fully decentralized.</p>
                 <button
-                onClick={() => router.push('/createtoken')}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out">
+                    onClick={handleClick}
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out">
                     Create Token
                 </button>
             </div>

@@ -6,6 +6,7 @@ import { createInitializeMetadataPointerInstruction, createInitializeMintInstruc
 import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 import { createInitializeInstruction, pack } from '@solana/spl-token-metadata';
 import { uploadToPinata } from "@/utils/pinataUpload";
+import toast from "react-hot-toast";
 // check point before creating associated token accout
 const Page = () => {
   const [showSocials, setShowSocials] = useState(false);
@@ -15,7 +16,7 @@ const Page = () => {
   const [supply, setSupply] = useState("");
   const [tokenImage, setTokenImage] = useState(null);
   const [description, setDescription] = useState("");
-
+  const [loading, setLoading] = useState(false);
 
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -34,79 +35,123 @@ const Page = () => {
   const clickHandler = async () => {
 
 
-    const metadataURI = await uploadToPinata(tokenImage, tokenName, tokenSymbol, description);
-    console.log("Metadata uploaded to IPFS:", metadataURI);
 
-
-    const mintKeypair = Keypair.generate();
-    const metadata = {
-
-      mint: mintKeypair.publicKey,
-      name: tokenName,
-      symbol: tokenSymbol,
-      uri: metadataURI,
-      additionalMetadata: [["description", "Only Possible On Solana"]],
-    };
-
-
-    const mintLen = getMintLen([ExtensionType.MetadataPointer]);
-    const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
-    const lamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
-
-
-    const decimalsNumber = Number(decimals);
-    if (isNaN(decimalsNumber) || decimalsNumber < 0 || decimalsNumber > 255) {
-      alert("Decimals must be a number between 0 and 255.");
+    if (!wallet.connected) {
+      toast.error("Connect your wallet first.");
       return;
     }
 
-    const transaction = new Transaction().add(
+    setLoading(true);
 
-      SystemProgram.createAccount({
-        fromPubkey: wallet.publicKey,
-        newAccountPubkey: mintKeypair.publicKey,
-        space: mintLen,
-        lamports,
-        programId: TOKEN_2022_PROGRAM_ID,
-      }),
+    const loadingToast = toast.loading("Creating your token...");
 
-      createInitializeMetadataPointerInstruction(
-        mintKeypair.publicKey,
-        wallet.publicKey,
-        mintKeypair.publicKey,
-        TOKEN_2022_PROGRAM_ID
-      ),
 
-      createInitializeMintInstruction(
-        mintKeypair.publicKey,
-        decimalsNumber,
-        wallet.publicKey,
-        wallet.publicKey,
-        TOKEN_2022_PROGRAM_ID
-      ),
 
-      createInitializeInstruction({
-        programId: TOKEN_2022_PROGRAM_ID,
-        metadata: mintKeypair.publicKey,
-        updateAuthority: wallet.publicKey,
+
+    try {
+      const metadataURI = await uploadToPinata(tokenImage, tokenName, tokenSymbol, description);
+      console.log("Metadata uploaded to IPFS:", metadataURI);
+
+
+      const mintKeypair = Keypair.generate();
+      const metadata = {
+
         mint: mintKeypair.publicKey,
-        name: metadata.name,
-        symbol: metadata.symbol,
-        uri: metadata.uri,
-        mintAuthority: wallet.publicKey,
-      }),
-    );
+        name: tokenName,
+        symbol: tokenSymbol,
+        uri: metadataURI,
+        additionalMetadata: [["description", "Only Possible On Solana"]],
+      };
 
-    // console.log(metadata.mint, metadata.updateAuthority, metadata.name, metadata.symbol, metadata.uri, metadata);
 
-    transaction.feePayer = wallet.publicKey;
-    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    transaction.partialSign(mintKeypair);
+      const mintLen = getMintLen([ExtensionType.MetadataPointer]);
+      const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
+      const lamports = await connection.getMinimumBalanceForRentExemption(mintLen + metadataLen);
 
-    await wallet.sendTransaction(transaction, connection);
 
-    console.log(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
-    alert(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
+      const decimalsNumber = Number(decimals);
+      if (isNaN(decimalsNumber) || decimalsNumber < 0 || decimalsNumber > 255) {
+        alert("Decimals must be a number between 0 and 255.");
+        return;
+      }
+
+      const transaction = new Transaction().add(
+
+        SystemProgram.createAccount({
+          fromPubkey: wallet.publicKey,
+          newAccountPubkey: mintKeypair.publicKey,
+          space: mintLen,
+          lamports,
+          programId: TOKEN_2022_PROGRAM_ID,
+        }),
+
+        createInitializeMetadataPointerInstruction(
+          mintKeypair.publicKey,
+          wallet.publicKey,
+          mintKeypair.publicKey,
+          TOKEN_2022_PROGRAM_ID
+        ),
+
+        createInitializeMintInstruction(
+          mintKeypair.publicKey,
+          decimalsNumber,
+          wallet.publicKey,
+          wallet.publicKey,
+          TOKEN_2022_PROGRAM_ID
+        ),
+
+        createInitializeInstruction({
+          programId: TOKEN_2022_PROGRAM_ID,
+          metadata: mintKeypair.publicKey,
+          updateAuthority: wallet.publicKey,
+          mint: mintKeypair.publicKey,
+          name: metadata.name,
+          symbol: metadata.symbol,
+          uri: metadata.uri,
+          mintAuthority: wallet.publicKey,
+        }),
+      );
+
+      // console.log(metadata.mint, metadata.updateAuthority, metadata.name, metadata.symbol, metadata.uri, metadata);
+
+      transaction.feePayer = wallet.publicKey;
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+      transaction.partialSign(mintKeypair);
+
+      await wallet.sendTransaction(transaction, connection);
+
+
+      toast.dismiss(loadingToast);
+      toast.custom((t) => (
+        <div className="bg-[#1e1e2f] text-white border border-purple-500 px-6 py-4 rounded-xl shadow-lg flex items-center gap-4">
+          <div className="flex-1">
+            <p className="font-semibold">Token Created!</p>
+            <p className="text-sm opacity-75">{mintKeypair.publicKey.toBase58()}</p>
+          </div>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              window.open(`https://explorer.solana.com/address/${mintKeypair.publicKey.toBase58()}?cluster=devnet`, "_blank");
+            }}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
+          >
+            View
+          </button>
+        </div>
+      ));
+    } catch (err) {
+      toast.error(err.message || "Failed to create token", {
+        id: loadingToast,
+        duration: 10000,
+      });
+    } finally {
+      setLoading(false);
+    }
+
+
+
+
+    // alert(`Token mint created at ${mintKeypair.publicKey.toBase58()}`);
     // console.log("Token Created:", {
     //   tokenName,
     //   tokenSymbol,
@@ -255,7 +300,7 @@ const Page = () => {
           )}
 
           <div className="mt-4 text-sm">
-            {!wallet.connected && (
+            {!wallet.connected   && (
               <p className="text-red-500">Please connect your wallet to create a token.</p>
             )}
           </div>
@@ -264,10 +309,10 @@ const Page = () => {
             <button
               onClick={clickHandler}
               className={`w-full text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out 
-                ${!wallet.connected || !isFormValid ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"}`}
-              disabled={!wallet.connected || !isFormValid}
+                ${!wallet.connected || !isFormValid || loading ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"}`}
+              disabled={!wallet.connected || !isFormValid || loading}
             >
-              Create Token
+              {loading ? "Creating..." : "Create Token"}
             </button>
           </div>
         </div>
