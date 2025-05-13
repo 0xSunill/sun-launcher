@@ -83,16 +83,7 @@ const MintTokenPage = () => {
 
       toast.dismiss(loadingToast);
 
-      // toast.success("Minted!", {
-      //   duration: 5000,
-      //   iconTheme: {
-      //     primary: '#4ade80',
-      //     secondary: '#1e1e2f',
-      //   },
-      // });
-
-      // console.log("Mint successful!");
-
+    
 
       toast.custom((t) => (
         <div className="bg-[#1e1e2f] text-white border border-purple-500 px-4 py-3 sm:px-6 sm:py-4 rounded-xl shadow-lg flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-[90%] sm:w-auto max-w-[500px] mx-auto">

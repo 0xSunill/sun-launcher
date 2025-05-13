@@ -46,15 +46,6 @@ const Skeleton = () => {
                         <div className="w-14 h-8 bg-gray-700 rounded-full"></div>
                     </div>
 
-                    {/* <div className="flex flex-col gap-4 w-full">
-                        {[1, 2, 3].map((_, idx) => (
-                            <div key={idx}>
-                                <div className="text-white h-5 w-24 bg-gray-700 rounded-md mb-2"></div>
-                                <div className="w-full h-12 bg-gray-700 rounded-xl"></div>
-                            </div>
-                        ))}
-                    </div> */}
-
                     <div className="mt-4 text-sm h-5 bg-gray-700 rounded-md w-2/3"></div>
 
                     <div className="w-full mt-4">

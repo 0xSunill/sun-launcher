@@ -1,5 +1,5 @@
 "use client"
-// import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+
 import WalletMultiButton from './WalletButton' 
 
 import Image from 'next/image'
