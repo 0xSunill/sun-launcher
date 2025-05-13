@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Sun launcher",
   description: "a solana token launcher",
+  
 };
 
 export default function RootLayout({ children }) {

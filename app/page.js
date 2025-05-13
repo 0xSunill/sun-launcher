@@ -5,6 +5,7 @@ import Footer from "@/components/Footer"
 import Hero from "@/components/Hero"
 import Nav from "@/components/Nav"
 import Skeleton from "@/components/Skeleton"
+import Head from "next/head"
 
 export default function Home() {
   const [loading, setLoading] = useState(false)
