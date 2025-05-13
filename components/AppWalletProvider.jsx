@@ -34,7 +34,7 @@ export default function AppWalletProvider({ children }) {
 
   return (
     <ConnectionProvider endpoint={endpoint} >
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={[]} autoConnect>
         <WalletModalProvider>
 
 
