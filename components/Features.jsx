@@ -14,7 +14,7 @@ const Features = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-10 max-w-5xl mx-auto">
-                {/* Feature 1 */}
+      
                 <div className="flex items-start space-x-4">
                     <div className="bg-purple-600 text-white p-3 rounded-lg">
                         <i className="fas fa-rocket text-xl"></i>
@@ -27,7 +27,7 @@ const Features = () => {
                     </div>
                 </div>
 
-                {/* Feature 2 */}
+              
                 <div className="flex items-start space-x-4">
                     <div className="bg-purple-600 text-white p-3 rounded-lg">
                         <i className="fas fa-bolt text-xl"></i>
@@ -40,7 +40,7 @@ const Features = () => {
                     </div>
                 </div>
 
-                {/* Feature 3 */}
+              
                 <div className="flex items-start space-x-4">
                     <div className="bg-purple-600 text-white p-3 rounded-lg">
                         <i className="fas fa-shield-alt text-xl"></i>
@@ -53,7 +53,6 @@ const Features = () => {
                     </div>
                 </div>
 
-                {/* Feature 4 */}
                 <div className="flex items-start space-x-4">
                     <div className="bg-purple-600 text-white p-3 rounded-lg">
                         <i className="fas fa-wallet text-xl"></i>
