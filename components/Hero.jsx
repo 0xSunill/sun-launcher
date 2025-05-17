@@ -17,7 +17,12 @@ const Hero = ({ setLoading }) => {
 
 
     const handleClickMint = () => {
-        console.log("mint token route")
+       
+
+        setLoading(true)
+        setTimeout(() => {
+            router.push('/minttoken')
+        }, 1000)
     }
     return (
         <div className='flex flex-1 py-16 px-4 md:px-20 pt-20 md:flex-row flex-col '>
