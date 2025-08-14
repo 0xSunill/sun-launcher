@@ -38,7 +38,7 @@ const Hero = ({ setLoading }) => {
                     <button
                         onClick={handleClickMint}
                         className="bg-green-600 sm:ml-6 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out">
-                        Create Token
+                        Mint Token
                     </button>
                 </div>
             </div>
