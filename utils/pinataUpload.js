@@ -1,8 +1,6 @@
 
 
-import axios from 'axios';
-
-export const uploadToPinata = async (file, name,symbol, description) => {
+export const uploadToPinata = async (file, name, symbol, description) => {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -22,15 +20,19 @@ export const uploadToPinata = async (file, name,symbol, description) => {
 
   formData.append('pinataOptions', pinataOptions);
 
-  const imageRes = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
-    maxContentLength: "Infinity",
+  const imageRes = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+    method: 'POST',
     headers: {
       'Authorization': process.env.NEXT_PUBLIC_PINATA_JWT,
-      'Content-Type': 'multipart/form-data',
+      // Note: do NOT set Content-Type for FormData — browser sets it automatically with boundary
     },
+    body: formData,
   });
 
-  const imageCID = imageRes.data.IpfsHash;
+  if (!imageRes.ok) throw new Error(`Pinata image upload failed: ${imageRes.statusText}`);
+  const imageData = await imageRes.json();
+
+  const imageCID = imageData.IpfsHash;
   const imageURI = `https://gateway.pinata.cloud/ipfs/${imageCID}`;
 
   // Now upload metadata
@@ -42,14 +44,19 @@ export const uploadToPinata = async (file, name,symbol, description) => {
     attributes: [],
   };
 
-  const metaRes = await axios.post("https://api.pinata.cloud/pinning/pinJSONToIPFS", metadataJSON, {
+  const metaRes = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+    method: 'POST',
     headers: {
-     Authorization: process.env.NEXT_PUBLIC_PINATA_JWT,
+      'Authorization': process.env.NEXT_PUBLIC_PINATA_JWT,
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify(metadataJSON),
   });
 
-  const metadataCID = metaRes.data.IpfsHash;
+  if (!metaRes.ok) throw new Error(`Pinata metadata upload failed: ${metaRes.statusText}`);
+  const metaData = await metaRes.json();
+
+  const metadataCID = metaData.IpfsHash;
   const metadataURI = `https://gateway.pinata.cloud/ipfs/${metadataCID}`;
 
   return metadataURI;
