@@ -24,12 +24,20 @@ const Hero = ({ setLoading }) => {
             router.push('/minttoken')
         }, 1000)
     }
+
+    const handleClickLiquidity = () => {
+        setLoading(true)
+        setTimeout(() => {
+            router.push('/liquidity')
+        }, 1000)
+    }
+
     return (
         <div className='flex flex-1 py-16 px-4 md:px-20 pt-20 md:flex-row flex-col '>
             <div className='flex-1 flex  justify-center items-start flex-col gap-2  '>
                 <h1 className='text-6xl font-bold text-white'>Create Your Solana <br />token</h1>
                 <p className='text-lg text-gray-400 mt-4 mb-2 text-wrap max-w-[470px] '> Launch your own SPL token on the Solana blockchain in just a few clicks. No coding required. Fast, secure, and fully decentralized.</p>
-                <div className='flex flex-row justify-start  items-center gap-4'>
+                <div className='flex flex-row flex-wrap justify-start  items-center gap-4'>
                     <button
                         onClick={handleClick}
                         className="bg-purple-600  hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out">
@@ -37,8 +45,13 @@ const Hero = ({ setLoading }) => {
                     </button>
                     <button
                         onClick={handleClickMint}
-                        className="bg-green-600 sm:ml-6 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out">
+                        className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out">
                         Mint Token
+                    </button>
+                    <button
+                        onClick={handleClickLiquidity}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out">
+                        Liquidity Pool
                     </button>
                 </div>
             </div>

@@ -1,9 +1,10 @@
-import React from 'react'
+import LiquidityPage from '@/components/LiquidityPage';
+import React, { Suspense } from 'react';
 
-const page = () => {
+export default function Page() {
   return (
-    <div>adding liquidity </div>
-  )
+    <Suspense fallback={<div className="text-white text-center pt-10">Loading...</div>}>
+      <LiquidityPage />
+    </Suspense>
+  );
 }
-
-export default page
