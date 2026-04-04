@@ -58,6 +58,5 @@ export const uploadToPinata = async (file, name, symbol, description) => {
 
   const metadataCID = metaData.IpfsHash;
   const metadataURI = `https://gateway.pinata.cloud/ipfs/${metadataCID}`;
-
   return metadataURI;
 };

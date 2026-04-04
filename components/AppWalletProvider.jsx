@@ -51,7 +51,6 @@ export default function AppWalletProvider({ children }) {
       <WalletProvider wallets={[]} autoConnect>
         <WalletModalProvider>
 
-
           {children}
 
         </WalletModalProvider>
