@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getMint } from '@solana/spl-token';
 import { Raydium, TxVersion, parseTokenAccountResp } from '@raydium-io/raydium-sdk-v2';
 import Decimal from 'decimal.js';
 import { useRouter } from 'next/navigation';
@@ -49,6 +49,7 @@ const LiquidityPage = () => {
 
     try {
       // Load Raydium SDK
+      console.log('[DEBUG] Step 1: Loading Raydium SDK...');
       const raydium = await Raydium.load({
         owner: publicKey,
         connection,
@@ -57,9 +58,11 @@ const LiquidityPage = () => {
         blockhashCommitment: 'finalized',
         signAllTransactions,
       });
+      console.log('[DEBUG] Step 1 done.');
 
       // Fetch token accounts for the connected wallet
-      const solAccountResp = await connection.getTokenAccountsByOwner(publicKey, { mint: WSOL_MINT });
+      console.log('[DEBUG] Step 2: Fetching token accounts...');
+      const solAccountResp = await connection.getAccountInfo(publicKey);
       const token2022Resp = await connection.getTokenAccountsByOwner(publicKey, { programId: TOKEN_2022_PROGRAM_ID });
       const tokenResp = await connection.getTokenAccountsByOwner(publicKey, { programId: TOKEN_PROGRAM_ID });
 
@@ -73,36 +76,82 @@ const LiquidityPage = () => {
           },
         })
       );
+      console.log('[DEBUG] Step 2 done.');
 
-      // Fetch mint info for both tokens
-      const [mintInfoA, mintInfoB] = await raydium.token.getTokenInfo([
-        WSOL_MINT.toBase58(),
-        tokenMint.toBase58(),
-      ]);
+      // Fetch mint info on-chain (getTokenInfo won't find custom devnet tokens)
+      console.log('[DEBUG] Step 3: Fetching mint info on-chain...');
+      const mintDataB = await getMint(connection, tokenMint, 'confirmed', TOKEN_2022_PROGRAM_ID);
+      console.log('[DEBUG] Step 3 done. mintB decimals:', mintDataB.decimals);
 
-      const solAmountDecimal = new Decimal(solAmount).mul(LAMPORTS_PER_SOL).toFixed(0);
-      const tokenAmountDecimal = new Decimal(tokenAmount).mul(10 ** (mintInfoB.decimals || 6)).toFixed(0);
+      // Build ApiV3Token objects manually
+      const mintInfoA = {
+        chainId: 103,
+        address: WSOL_MINT.toBase58(),
+        programId: TOKEN_PROGRAM_ID.toBase58(),
+        decimals: 9,
+        symbol: 'WSOL',
+        name: 'Wrapped SOL',
+        logoURI: '',
+        tags: [],
+        extensions: {},
+      };
+      const mintInfoB = {
+        chainId: 103,
+        address: tokenMint.toBase58(),
+        programId: TOKEN_2022_PROGRAM_ID.toBase58(),
+        decimals: mintDataB.decimals,
+        symbol: 'TOKEN',
+        name: 'Token',
+        logoURI: '',
+        tags: [],
+        extensions: {},
+      };
+      console.log('[DEBUG] mintInfoA:', mintInfoA, 'mintInfoB:', mintInfoB);
+
+      console.log('[DEBUG] Step 4: Computing amounts...');
+      const solAmountDecimal = new Decimal(solAmount).mul(LAMPORTS_PER_SOL).toDecimalPlaces(0).toFixed();
+      const tokenAmountDecimal = new Decimal(tokenAmount).mul(new Decimal(10).pow(mintInfoB.decimals || 6)).toDecimalPlaces(0).toFixed();
+      console.log('[DEBUG] solAmountDecimal:', solAmountDecimal, 'tokenAmountDecimal:', tokenAmountDecimal);
+
+      console.log('[DEBUG] Step 5: Computing BN amounts...');
+      const BN = (await import('bn.js')).default;
+      const mintAAmount = new BN(solAmountDecimal);
+      const mintBAmount = new BN(tokenAmountDecimal);
+      console.log('[DEBUG] Step 5 done. mintAAmount:', mintAAmount.toString(), 'mintBAmount:', mintBAmount.toString());
+
+      // Fetch CPMM fee configs from Raydium API
+      console.log('[DEBUG] Step 5.5: Fetching CPMM configs...');
+      const feeConfigs = await raydium.api.getCpmmConfigs();
+      console.log('[DEBUG] CPMM configs:', feeConfigs);
+      if (!feeConfigs || feeConfigs.length === 0) {
+        throw new Error('No CPMM configs found. Raydium API may not support devnet configs.');
+      }
+      // Select config with 0.25% trade fee (2500 basis points) or fallback to first
+      const feeConfig = feeConfigs.find(c => c.tradeFeeRate === 2500) || feeConfigs[0];
+      console.log('[DEBUG] Selected feeConfig:', feeConfig);
 
       // Create CPMM pool
+      console.log('[DEBUG] Step 6: Creating CPMM pool...');
       const { execute, extInfo } = await raydium.cpmm.createPool({
         programId: CPMM_PROGRAM_ID,
         poolFeeAccount: new PublicKey('DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8'), // devnet fee account
         mintA: mintInfoA,
         mintB: mintInfoB,
-        mintAAmount: BigInt(solAmountDecimal),
-        mintBAmount: BigInt(tokenAmountDecimal),
-        startTime: BigInt(0),
-        feeConfig: {
-          tradeFeeRate: BigInt(2500), // 0.25%
-        },
+        mintAAmount,
+        mintBAmount,
+        startTime: new BN(0),
+        feeConfig,
         associatedOnly: false,
         ownerInfo: {
           useSOLBalance: true,
         },
         txVersion: TxVersion.V0,
       });
+      console.log('[DEBUG] Step 6 done.');
 
+      console.log('[DEBUG] Step 7: Executing transaction...');
       const { txId } = await execute({ sendAndConfirm: true });
+      console.log('[DEBUG] Step 7 done. txId:', txId);
 
       const poolId = extInfo?.address?.poolId?.toBase58?.() || 'N/A';
 

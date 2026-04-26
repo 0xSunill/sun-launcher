@@ -8,7 +8,7 @@ Built with **Next.js 15 (App Router)**, **Token-2022 Programme**, and the **Rayd
 
 ## 🚀 Live Demo
 
-> Deployed on Vercel — [sun-launcher.vercel.app](https://sun-launcher.vercel.app) *(devnet)*
+> Deployed on Vercel — [sun-launcher.vercel.app](https://sun-launcher.vercel.app) _(devnet)_
 
 ---
 
@@ -26,18 +26,18 @@ Built with **Next.js 15 (App Router)**, **Token-2022 Programme**, and the **Rayd
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 15 (App Router, Turbopack) |
-| Blockchain | Solana Devnet |
-| Token Standard | SPL Token-2022 with MetadataPointer Extension |
-| Wallet | `@solana/wallet-adapter-react` v0.15 (auto-detect) |
-| RPC Provider | Helius Devnet RPC |
-| IPFS / Metadata | Pinata (`pinFileToIPFS`, `pinJSONToIPFS`) |
-| Liquidity | Raydium SDK v2 (CPMM) |
-| Styling | Tailwind CSS |
-| Notifications | `react-hot-toast` |
-| Decimals | `decimal.js` |
+| Layer           | Technology                                         |
+| --------------- | -------------------------------------------------- |
+| Framework       | Next.js 15 (App Router, Turbopack)                 |
+| Blockchain      | Solana Devnet                                      |
+| Token Standard  | SPL Token-2022 with MetadataPointer Extension      |
+| Wallet          | `@solana/wallet-adapter-react` v0.15 (auto-detect) |
+| RPC Provider    | Helius Devnet RPC                                  |
+| IPFS / Metadata | Pinata (`pinFileToIPFS`, `pinJSONToIPFS`)          |
+| Liquidity       | Raydium SDK v2 (CPMM)                              |
+| Styling         | Tailwind CSS                                       |
+| Notifications   | `react-hot-toast`                                  |
+| Decimals        | `decimal.js`                                       |
 
 ---
 
@@ -123,6 +123,8 @@ Or use the [Solana Web Faucet](https://faucet.solana.com).
 
 ## 🪙 How to Create a Token
 
+![alt text](image.png)
+
 1. Connect your Phantom wallet (make sure it's on **devnet**)
 2. Navigate to **Create Token**
 3. Fill in token name, symbol, description, and upload an image
@@ -167,10 +169,10 @@ Or use the [Solana Web Faucet](https://faucet.solana.com).
 
 ## 🔐 Environment Variables Reference
 
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_HELIUS_API_KEY_DEVNET` | Helius RPC API key for Solana devnet |
-| `NEXT_PUBLIC_PINATA_API_KEY` | Pinata API key for IPFS file uploads |
+| Variable                            | Description                             |
+| ----------------------------------- | --------------------------------------- |
+| `NEXT_PUBLIC_HELIUS_API_KEY_DEVNET` | Helius RPC API key for Solana devnet    |
+| `NEXT_PUBLIC_PINATA_API_KEY`        | Pinata API key for IPFS file uploads    |
 | `NEXT_PUBLIC_PINATA_SECRET_API_KEY` | Pinata secret key for IPFS file uploads |
 
 ---
